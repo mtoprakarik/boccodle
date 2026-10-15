@@ -42,3 +42,5 @@ Arda Fazlıoğlu | BEMACS | 2 | Erkek | Isonzo | Az | Var | Var | Az
 Mustafa İmamoğlu | BIEM | 2 | Erkek | Ev | Hiç | Yok | Yok | Çok
 Selim Birışık | BIEM | 2 | Erkek | Isonzo | Az | Var | Yok | Orta
 Ege Can Elmas | BIEF | 2 | Erkek | Ev | Az | Yok | Var | Orta
+Zeynep Didar Saygın | BIEM | 3 | Kız | Javotte | Hiç | Var | Var | Orta
+Kaan Kurşunoğlu | BESS | 3 | Erkek | Ev | Orta | Yok | Var | Orta
