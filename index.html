@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boccodle</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff; --text:#1a1a1b; --muted:#787c7e; --line:#d3d6da; --key:#d3d6da;
+    --green:#6aaa64; --yellow:#c9b458; --gray:#787c7e; --toast:#121213; --toastText:#fff;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#121213; --text:#f8f8f8; --muted:#818384; --line:#3a3a3c; --key:#818384;
+      --green:#538d4e; --yellow:#b59f3b; --gray:#3a3a3c; --toast:#f8f8f8; --toastText:#121213;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121213; --text:#f8f8f8; --muted:#818384; --line:#3a3a3c; --key:#818384;
+    --green:#538d4e; --yellow:#b59f3b; --gray:#3a3a3c; --toast:#f8f8f8; --toastText:#121213;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"Libre Franklin","Helvetica Neue",Arial,sans-serif}
+
+  header{
+    height:56px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 16px;
+  }
+  header h1{margin:0;font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:30px;letter-spacing:.3px}
+  .left,.right{display:flex;gap:4px}
+  .right{justify-content:flex-end}
+  .icon{background:none;border:0;color:var(--text);cursor:pointer;padding:6px;border-radius:4px;display:grid;place-items:center}
+  .icon:hover{background:var(--line)}
+
+  main{max-width:1100px;margin:0 auto;padding:24px 16px 48px}
+
+  .modes{display:flex;justify-content:center;gap:24px;margin-bottom:24px}
+  .modes button{
+    background:none;border:0;padding:4px 0;font:700 13px "Libre Franklin",sans-serif;letter-spacing:1px;text-transform:uppercase;
+    color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  }
+  .modes button.active{color:var(--text);border-color:var(--text)}
+
+  .search{position:relative;display:flex;gap:8px;max-width:520px;margin:0 auto}
+  #inp{
+    flex:1;padding:14px;font:500 16px "Libre Franklin",sans-serif;color:var(--text);background:var(--bg);
+    border:2px solid var(--line);border-radius:4px;outline:none;
+  }
+  #inp:focus{border-color:var(--muted)}
+  #btn{
+    padding:0 22px;font:700 14px "Libre Franklin",sans-serif;text-transform:uppercase;letter-spacing:1px;
+    background:var(--key);color:var(--text);border:0;border-radius:4px;cursor:pointer;
+  }
+  #btn:hover{filter:brightness(.92)}
+  #btn:disabled,#inp:disabled{opacity:.5;cursor:default}
+  #sug{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:10;background:var(--bg);
+    border:1px solid var(--line);border-radius:4px;max-height:264px;overflow-y:auto;box-shadow:0 4px 23px rgba(0,0,0,.15);
+  }
+  #sug:empty{display:none}
+  #sug div{padding:11px 14px;cursor:pointer;font-size:15px}
+  #sug div + div{border-top:1px solid var(--line)}
+  #sug div:hover,#sug div.sel{background:var(--line)}
+
+  .board{margin-top:32px;overflow-x:auto}
+  .grid{min-width:900px}
+  .hrow,.grow{display:grid;grid-template-columns:1.4fr repeat(8,1fr);gap:5px;margin-bottom:5px}
+  .hrow div{
+    text-align:center;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+    padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:4px;
+  }
+  .tile{
+    height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;padding:4px;
+    color:#fff;border:2px solid transparent;
+  }
+  .tile.name{color:var(--text);border-color:var(--line);text-transform:none;font-size:14px;letter-spacing:0;justify-content:center;align-items:flex-start;padding:4px 12px;text-align:left}
+  .tile.g{background:var(--green)} .tile.y{background:var(--yellow)} .tile.x{background:var(--gray)}
+  .tile .ar{font-size:15px;line-height:1;margin-top:3px}
+  .tile.flip{animation:flip .5s ease-in both}
+  @keyframes flip{
+    0%{transform:rotateX(0);background:var(--bg);border-color:var(--line);color:var(--text)}
+    49%{transform:rotateX(-90deg);background:var(--bg);border-color:var(--line);color:var(--text)}
+    50%{transform:rotateX(-90deg)}
+    100%{transform:rotateX(0)}
+  }
+  .grow.dance .tile:not(.name){animation:flip .5s ease-in both, bounce .25s ease 1 both}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  .tile.pop{animation:pop .12s ease}
+  @keyframes pop{50%{transform:scale(1.06)}}
+
+  .empty{text-align:center;color:var(--muted);font-size:14px;padding:28px 0}
+
+  .toast{
+    position:fixed;top:72px;left:50%;transform:translateX(-50%);background:var(--toast);color:var(--toastText);
+    font-weight:700;font-size:14px;padding:13px 16px;border-radius:4px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30;
+  }
+  .toast.show{opacity:1}
+  .shake{animation:shake .35s}
+  @keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+
+  /* modal */
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:40;padding:16px}
+  :root[data-theme="dark"] .ov{background:rgba(0,0,0,.7)}
+  .ov.open{display:flex}
+  .modal{
+    background:var(--bg);color:var(--text);border-radius:8px;box-shadow:0 4px 23px rgba(0,0,0,.2);width:100%;max-width:460px;
+    padding:28px 24px 24px;position:relative;animation:up .2s ease;
+  }
+  @keyframes up{from{transform:translateY(30px);opacity:0}}
+  .modal .close{position:absolute;top:12px;right:12px}
+  .modal h2{font-size:16px;font-weight:800;letter-spacing:1px;text-transform:uppercase;text-align:center;margin:0 0 16px}
+  .modal h3{font-family:"Playfair Display",Georgia,serif;font-size:26px;margin:0 0 6px}
+  .modal p,.modal li{font-size:15px;line-height:1.5}
+  .modal ul{padding-left:20px;margin:8px 0}
+  .ex{display:flex;gap:5px;margin:10px 0 4px}
+  .ex .tile{width:62px;height:44px;font-size:12px}
+  .stats{display:flex;justify-content:center;gap:18px;margin-bottom:16px}
+  .stats div{text-align:center;width:70px}
+  .stats b{display:block;font-size:34px;font-weight:500}
+  .stats span{font-size:12px}
+  .sep{border-top:1px solid var(--line);margin:18px 0}
+  .actions{display:flex;gap:10px;justify-content:center}
+  .share{
+    background:var(--green);color:#fff;border:0;border-radius:24px;padding:12px 26px;
+    font:700 15px "Libre Franklin",sans-serif;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;
+  }
+  .share.alt{background:var(--key);color:var(--text)}
+  .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;max-width:720px;margin:0 auto}
+  .names div{padding:12px 14px;border:1px solid var(--line);border-radius:4px;font-size:15px;font-weight:500}
+  .center{text-align:center}
+  .yest{text-align:center;color:var(--muted);font-size:13px;margin-top:40px}
+  .yest b{color:var(--text)}
+</style>
+</head>
+<body>
+<header>
+  <div class="left">
+    <button class="icon" id="helpBtn" title="Nasıl oynanır">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+    </button>
+  </div>
+  <h1>Boccodle</h1>
+  <div class="right">
+    <button class="icon" id="statsBtn" title="İstatistikler">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="12" width="4" height="8"/><rect x="10" y="6" width="4" height="14"/><rect x="16" y="9" width="4" height="11"/></svg>
+    </button>
+    <button class="icon" id="themeBtn" title="Tema">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="modes">
+    <button id="mDaily" class="active">Günlük</button>
+    <button id="mFree">Serbest</button>
+    <button id="mList">Kişiler</button>
+  </div>
+
+  <div id="listView" style="display:none">
+    <p class="center" style="color:var(--muted);font-size:13px;margin:0 0 16px"><span id="listCount"></span> kişi</p>
+    <div class="names" id="names"></div>
+  </div>
+
+  <div id="gameView">
+  <div class="search">
+    <input id="inp" placeholder="İsim Soyisim" autocomplete="off">
+    <button id="btn">Dene</button>
+    <div id="sug"></div>
+  </div>
+
+  <div class="board">
+    <div class="grid">
+      <div class="hrow"><div>İsim</div><div>Bölüm</div><div>Sınıf</div><div>Cinsiyet</div><div>Yurt</div><div>Ot</div><div>İSU</div><div>Sevgili</div><div>Ders</div></div>
+      <div id="rows"></div>
+      <div class="empty" id="empty">Bir isim yazarak başla.</div>
+    </div>
+  </div>
+
+  <div class="yest">Dünün kişisi: <b id="yname"></b></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Help -->
+<div class="ov" id="helpOv"><div class="modal">
+  <button class="icon close" data-close>
+    <svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+  <h3>Nasıl oynanır</h3>
+  <p>Günün kişisini bul. Her tahminden sonra kutuların rengi ne kadar yaklaştığını gösterir.</p>
+  <div class="ex"><div class="tile g">BIEM</div><div class="tile y">BEMACC</div><div class="tile x">Isonzo</div></div>
+  <ul>
+    <li><b>Yeşil</b>: doğru</li>
+    <li><b>Sarı</b>: yakın bölüm (BEMACS ↔ BEMACC, BAI ↔ AI MSc)</li>
+    <li><b>Gri</b>: yanlış</li>
+    <li><b>↑ / ↓</b>: sınıf, ot ve ders için daha yüksek / düşük</li>
+  </ul>
+  <p>Sınıf sıralaması: 1 &lt; 2 &lt; 3 &lt; Master 1 &lt; Master 2</p>
+  <p>Ot sıralaması: Hiç &lt; Az &lt; Çok &lt; Otparator</p>
+  <p>Ders sıralaması: Hiç &lt; Az &lt; Orta &lt; Çok</p>
+  <div class="sep"></div>
+  <p class="center" style="color:var(--muted);font-size:13px">Her gece 00.00'da yeni kişi.</p>
+</div></div>
+
+<!-- Stats -->
+<div class="ov" id="statsOv"><div class="modal">
+  <button class="icon close" data-close>
+    <svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+  <div id="result" class="center" style="display:none;margin-bottom:18px">
+    <h3 id="resTitle"></h3>
+    <p id="resText" style="margin:0;color:var(--muted)"></p>
+  </div>
+  <h2>İstatistikler</h2>
+  <div class="stats">
+    <div><b id="stPlayed">0</b><span>Oynanan</span></div>
+    <div><b id="stStreak">0</b><span>Seri</span></div>
+    <div><b id="stMax">0</b><span>En iyi seri</span></div>
+    <div><b id="stAvg">–</b><span>Ort. deneme</span></div>
+  </div>
+  <div class="actions" id="actions" style="display:none">
+    <button class="share" id="shareBtn">Paylaş</button>
+    <button class="share alt" id="againBtn" style="display:none">Yeni kişi</button>
+  </div>
+</div></div>
+
+<script>
+const OT = ["Hiç","Az","Çok","Otparator"];
+// Sınıf: 1-3 lisans, 4 = Master 1, 5 = Master 2
+const SINIF = {1:"1. sınıf",2:"2. sınıf",3:"3. sınıf",4:"Master 1",5:"Master 2"};
+// Yakın sayılan bölümler (sarı)
+const CLOSE = [["BEMACS","BEMACC"],["BAI","AI (MSc)"]];
+const DERS = ["Hiç","Az","Orta","Çok"];
+// [isim, bölüm, sınıf, cinsiyet, yurt, ot (0=hiç 1=az 2=çok 3=otparator), isu, sevgili ("Var"/"Yok"/"?"), ders (0=hiç 1=az 2=orta 3=çok)]
+const PEOPLE = [
+  ["Ömer Arda Muratoğlu","BEMACS",3,"Erkek","Pensio",0,"Var","Var",2],
+  ["Mehmet Toprak Arık","BESS",2,"Erkek","Pensio",3,"Yok","Yok",1],
+  ["Robin Cihan Güneş","BIEM",2,"Erkek","Pensio",1,"Var","Var",2],
+  ["Ayşe Berra Taşkın","BIEM",2,"Kız","Ev",3,"Yok","Yok",0],
+  ["Erinç Kılıç","BEMACS",3,"Erkek","Bligny",0,"Var","Yok",3],
+  ["Ömer Faruk Atasoy","BEMACS",3,"Erkek","Pensio",2,"Var","Var",2],
+  ["Tuna Çolakkaya","BEMACC",3,"Erkek","Ev",1,"Yok","Yok",2],
+  ["Deniz Sürtük","BAI",2,"Erkek","Pensio",0,"Var","Yok",3],
+  ["Sude Öğütçü","BIEM",1,"Kız","Pensio",0,"Var","Yok",1],
+  ["Emre Kalkan","BEMACS",2,"Erkek","Pensio",1,"Var","Yok",1],
+  ["Hasan Güneş Anacak","BIEM",2,"Erkek","Dubini",0,"Yok","Yok",2],
+  ["Yağmur Ocak","BIEM",2,"Kız","Isonzo",1,"Var","Var",2],
+  ["Demir Kaan Coşkuner","BIEM",2,"Erkek","Isonzo",3,"Var","Yok",1],
+  ["Ali Eren Köyel","BIEM",3,"Erkek","Pensio",1,"Var","Yok",2],
+  ["Alp Durgun","BEMACS",3,"Erkek","Pensio",0,"Var","Yok",3],
+  ["Buğrahan Dinçel","BEMACS",3,"Erkek","Pensio",2,"Var","Yok",1],
+  ["Timur Saraç","BEMACS",3,"Erkek","Pensio",2,"?","Yok",1],
+  ["Özgür Ayvaz","BAI",1,"Erkek","Bligny",0,"Var","Yok",2],
+  ["Çağlar Karaoğlan","BEMACS",3,"Erkek","Ev",3,"?","Yok",1],
+  ["Tuna Education","Cybersecurity (MSc)",4,"Erkek","Ev",0,"Var","Var",1],
+  ["Berkay","AI (MSc)",5,"Erkek","Pensio",3,"Var","?",1],
+].map(p=>({name:p[0],bolum:p[1],sinif:p[2],cins:p[3],yurt:p[4],ot:p[5],isu:p[6],sev:p[7],ders:p[8]}));
+
+const norm=s=>s.toLocaleLowerCase("tr").replace(/ı/g,"i").replace(/ğ/g,"g").replace(/ü/g,"u")
+  .replace(/ş/g,"s").replace(/ö/g,"o").replace(/ç/g,"c").trim();
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function dateKey(o=0){const d=new Date();d.setDate(d.getDate()+o);return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+const pickFor=k=>PEOPLE[hash("yurdle"+k)%PEOPLE.length];
+const dayNo=()=>Math.floor((new Date().setHours(0,0,0,0)-new Date(2026,9,15))/864e5)+1;
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+let mode="daily",target,guesses=[],colors=[],done=false,sel=-1;
+const $=id=>document.getElementById(id), inp=$("inp"), sug=$("sug"), rows=$("rows");
+
+/* theme */
+const savedTheme=store.get("yurdle-theme"); if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+$("themeBtn").onclick=()=>{
+  const cur=document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  const nx=cur==="dark"?"light":"dark"; document.documentElement.dataset.theme=nx; store.set("yurdle-theme",nx);
+};
+
+/* toast */
+let tt; function toast(msg,ms=1800){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),ms)}
+
+/* modals */
+function openOv(id){$(id).classList.add("open")}
+document.querySelectorAll(".ov").forEach(o=>o.addEventListener("click",e=>{if(e.target===o||e.target.closest("[data-close]"))o.classList.remove("open")}));
+$("helpBtn").onclick=()=>openOv("helpOv");
+$("statsBtn").onclick=()=>{fillStats();openOv("statsOv")};
+$("listCount").textContent=PEOPLE.length;
+[...PEOPLE].sort((a,b)=>a.name.localeCompare(b.name,"tr")).forEach(p=>{
+  const d=document.createElement("div"); d.textContent=p.name; $("names").appendChild(d);
+});
+function showView(list){
+  $("listView").style.display=list?"block":"none"; $("gameView").style.display=list?"none":"block";
+  $("mList").classList.toggle("active",list);
+  if(list){$("mDaily").classList.remove("active");$("mFree").classList.remove("active")}
+}
+
+function getStats(){return store.get("yurdle-stats")||{played:0,streak:0,max:0,total:0,last:null}}
+function fillStats(){
+  const s=getStats();
+  $("stPlayed").textContent=s.played; $("stStreak").textContent=s.streak; $("stMax").textContent=s.max;
+  $("stAvg").textContent=s.played?(s.total/s.played).toFixed(1):"–";
+  $("result").style.display=done?"block":"none"; $("actions").style.display=done?"flex":"none";
+  $("againBtn").style.display=done&&mode==="free"?"inline-block":"none";
+  $("shareBtn").style.display=done&&mode==="daily"?"inline-block":"none";
+  if(done){
+    $("resTitle").textContent = ["Dahi!","Muhteşem!","Harika!","Çok iyi!","Güzel!","Fena değil","Pfiu!"][Math.min(guesses.length-1,6)];
+    $("resText").textContent = `${target.name} · ${guesses.length} denemede`;
+  }
+}
+
+function lock(v){inp.disabled=v;$("btn").disabled=v}
+
+function start(m){
+  mode=m; rows.innerHTML=""; guesses=[]; colors=[]; done=false; lock(false); $("empty").style.display="block";
+  $("mDaily").classList.toggle("active",m==="daily"); $("mFree").classList.toggle("active",m==="free");
+  if(m==="daily"){
+    target=pickFor(dateKey());
+    (store.get("yurdle-"+dateKey())||[]).forEach(n=>{const p=PEOPLE.find(x=>x.name===n);if(p)guess(p,false,true)});
+  } else target=PEOPLE[Math.floor(Math.random()*PEOPLE.length)];
+  if(!done) inp.focus();
+}
+
+function tile(text,cls,i,ar,instant){
+  const d=document.createElement("div"); d.className="tile "+cls+(instant?"":" flip");
+  if(!instant) d.style.animationDelay=(i*0.25)+"s";
+  d.appendChild(document.createTextNode(text));
+  if(ar){const a=document.createElement("span");a.className="ar";a.textContent=ar;d.appendChild(a)}
+  return d;
+}
+
+function guess(p,save=true,restoring=false){
+  if(done||guesses.includes(p.name)) return;
+  guesses.push(p.name); $("empty").style.display="none";
+  if(save&&mode==="daily") store.set("yurdle-"+dateKey(),guesses);
+  const t=target, win=p.name===t.name, row=document.createElement("div"); row.className="grow";
+  const nm=document.createElement("div"); nm.className="tile name"; nm.textContent=p.name; row.appendChild(nm);
+  const close=CLOSE.some(g=>g.includes(p.bolum)&&g.includes(t.bolum));
+  const cells=[
+    [p.bolum, p.bolum===t.bolum?"g":close?"y":"x"],
+    [SINIF[p.sinif]||p.sinif, p.sinif===t.sinif?"g":"x", p.sinif<t.sinif?"↑":p.sinif>t.sinif?"↓":""],
+    [p.cins, p.cins===t.cins?"g":"x"],
+    [p.yurt, p.yurt===t.yurt?"g":"x"],
+    [OT[p.ot], p.ot===t.ot?"g":"x", p.ot<t.ot?"↑":p.ot>t.ot?"↓":""],
+    [p.isu, p.isu===t.isu?"g":"x"],
+    [p.sev, p.sev===t.sev?"g":"x"],
+    [DERS[p.ders], p.ders===t.ders?"g":"x", p.ders<t.ders?"↑":p.ders>t.ders?"↓":""],
+  ];
+  colors.push(cells.map(c=>c[1]));
+  cells.forEach((c,i)=>row.appendChild(tile(c[0],c[1],i,c[2],restoring)));
+  rows.prepend(row);
+
+  if(win){
+    done=true; lock(true);
+    if(mode==="daily"&&save){
+      const s=getStats(); s.played++; s.total+=guesses.length;
+      s.streak = s.last===dateKey(-1)?s.streak+1:1; s.max=Math.max(s.max,s.streak); s.last=dateKey();
+      store.set("yurdle-stats",s);
+    }
+    if(!restoring){
+      setTimeout(()=>{
+        [...row.querySelectorAll(".tile:not(.name)")].forEach((el,i)=>{
+          el.animate([{transform:"translateY(0)"},{transform:"translateY(-14px)"},{transform:"translateY(0)"}],{duration:300,delay:i*90});
+        });
+        toast(["Dahi!","Muhteşem!","Harika!","Çok iyi!","Güzel!","Fena değil","Pfiu!"][Math.min(guesses.length-1,6)]);
+      },1500);
+      setTimeout(()=>{fillStats();openOv("statsOv")},3200);
+    }
+  }
+}
+
+function matches(){
+  const q=norm(inp.value); if(!q) return [];
+  return PEOPLE.filter(p=>!guesses.includes(p.name)&&norm(p.name).split(" ").some((w,i,a)=>a.slice(i).join(" ").startsWith(q)));
+}
+function render(){
+  const m=matches(); sel=m.length?0:-1; sug.innerHTML="";
+  m.forEach((p,i)=>{const d=document.createElement("div"); if(i===sel)d.className="sel"; d.textContent=p.name;
+    d.onmousedown=e=>{e.preventDefault();submit(p)}; sug.appendChild(d)});
+}
+function submit(p){
+  if(done) return;
+  p=p||matches()[Math.max(sel,0)]||PEOPLE.find(x=>norm(x.name)===norm(inp.value));
+  if(!p){
+    if(inp.value.trim()) toast("Listede yok");
+    const s=document.querySelector(".search"); s.classList.remove("shake"); void s.offsetWidth; s.classList.add("shake"); return;
+  }
+  guess(p); inp.value=""; sug.innerHTML="";
+}
+
+inp.addEventListener("input",render);
+inp.addEventListener("keydown",e=>{
+  const items=[...sug.children];
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){ if(!items.length)return; e.preventDefault();
+    sel=(sel+(e.key==="ArrowDown"?1:-1)+items.length)%items.length; items.forEach((d,i)=>d.className=i===sel?"sel":"");
+    items[sel].scrollIntoView({block:"nearest"}); }
+  else if(e.key==="Enter") submit();
+  else if(e.key==="Escape") sug.innerHTML="";
+});
+inp.addEventListener("blur",()=>setTimeout(()=>sug.innerHTML="",120));
+$("btn").onclick=()=>submit();
+$("mDaily").onclick=()=>{showView(false);start("daily")};
+$("mFree").onclick=()=>{showView(false);start("free")};
+$("mList").onclick=()=>showView(true);
+$("againBtn").onclick=()=>{$("statsOv").classList.remove("open");start("free")};
+
+$("shareBtn").onclick=()=>{
+  const em={g:"🟩",y:"🟨",x:"⬛"};
+  const txt=`Boccodle #${dayNo()} ${guesses.length} deneme\n\n`+colors.map(r=>r.map(c=>em[c]).join("")).join("\n");
+  (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast("Panoya kopyalandı")).catch(()=>prompt("Kopyala:",txt));
+};
+
+$("yname").textContent=pickFor(dateKey(-1)).name;
+if(!store.get("yurdle-seen")){openOv("helpOv");store.set("yurdle-seen",1)}
+start("daily");
+</script>
+</body>
+</html>
