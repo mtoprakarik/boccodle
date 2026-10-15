@@ -40,3 +40,4 @@ Tuna Education | Cybersecurity (MSc) | Master 1 | Erkek | Ev | Hiç | Var | Var 
 Berkay | AI (MSc) | Master 2 | Erkek | Pensio | Otparator | Var | ? | Az
 Arda Fazlıoğlu | BEMACS | 2 | Erkek | Isonzo | Az | Var | Var | Az
 Mustafa İmamoğlu | BIEM | 2 | Erkek | Ev | Hiç | Yok | Yok | Çok
+Selim Birışık | BIEM | 2 | Erkek | Isonzo | Az | Var | Yok | Orta
