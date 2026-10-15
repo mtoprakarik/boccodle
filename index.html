@@ -308,7 +308,8 @@ const SHORT = {"Cybersecurity (MSc)":"Cyber MSc","AI (MSc)":"AI MSc"};
 const CLOSE = [["BEMACS","BEMACC"],["BAI","AI (MSc)"]];
 const DERS = ["Hiç","Az","Orta","Çok"];
 // [isim, bölüm, sınıf, cinsiyet, yurt, ot (0=hiç 1=az 2=çok 3=otparator), isu, sevgili ("Var"/"Yok"/"?"), ders (0=hiç 1=az 2=orta 3=çok)]
-const PEOPLE = [
+// Yedek liste: kisiler.txt okunamazsa (ör. dosyayı bilgisayarda açınca) bu kullanılır
+let PEOPLE = [
   ["Ömer Arda Muratoğlu","BEMACS",3,"Erkek","Pensio",0,"Var","Var",2],
   ["Mehmet Toprak Arık","BESS",2,"Erkek","Pensio",3,"Yok","Yok",1],
   ["Robin Cihan Güneş","BIEM",2,"Erkek","Pensio",1,"Var","Var",2],
@@ -330,6 +331,8 @@ const PEOPLE = [
   ["Çağlar Karaoğlan","BEMACS",3,"Erkek","Ev",3,"?","Yok",1],
   ["Tuna Education","Cybersecurity (MSc)",4,"Erkek","Ev",0,"Var","Var",1],
   ["Berkay","AI (MSc)",5,"Erkek","Pensio",3,"Var","?",1],
+  ["Arda Fazlıoğlu","BEMACS",2,"Erkek","Isonzo",1,"Var","Var",1],
+  ["Mustafa İmamoğlu","BIEM",2,"Erkek","Ev",0,"Yok","Yok",3],
 ].map(p=>({name:p[0],bolum:p[1],sinif:p[2],cins:p[3],yurt:p[4],ot:p[5],isu:p[6],sev:p[7],ders:p[8]}));
 
 const norm=s=>s.toLocaleLowerCase("tr").replace(/ı/g,"i").replace(/ğ/g,"g").replace(/ü/g,"u")
@@ -362,10 +365,41 @@ function openOv(id){$(id).classList.add("open")}
 document.querySelectorAll(".ov").forEach(o=>o.addEventListener("click",e=>{if(e.target===o||e.target.closest("[data-close]"))o.classList.remove("open")}));
 $("helpBtn").onclick=()=>openOv("helpOv");
 $("statsBtn").onclick=()=>{fillStats();openOv("statsOv")};
-$("listCount").textContent=PEOPLE.length;
-[...PEOPLE].sort((a,b)=>a.name.localeCompare(b.name,"tr")).forEach(p=>{
-  const d=document.createElement("div"); d.textContent=p.name; $("names").appendChild(d);
-});
+function buildList(){
+  $("listCount").textContent=PEOPLE.length; $("names").innerHTML="";
+  [...PEOPLE].sort((a,b)=>a.name.localeCompare(b.name,"tr")).forEach(p=>{
+    const d=document.createElement("div"); d.textContent=p.name; $("names").appendChild(d);
+  });
+}
+
+/* kisiler.txt okuma */
+function parseKisiler(txt){
+  const k=v=>norm(v||"");
+  const idx=(arr,v)=>{const i=arr.findIndex(a=>k(a)===k(v)); return i};
+  const SINIF_IN={"1":1,"2":2,"3":3,"4":4,"5":5,"master 1":4,"master1":4,"master 2":5,"master2":5};
+  const VYQ=v=>{const x=k(v); return x==="var"?"Var":x==="yok"?"Yok":"?"};
+  const out=[]; let started=false;
+  for(const raw of txt.split(/\r?\n/)){
+    const line=raw.trim();
+    if(/^-{5,}$/.test(line)){started=true;continue}
+    if(!started||!line||line.startsWith("#")) continue;
+    const c=line.split("|").map(x=>x.trim());
+    if(c.length<9){console.warn("Atlandı (eksik alan):",line);continue}
+    const sinif=SINIF_IN[k(c[2])], ot=idx(OT,c[5]), ders=idx(DERS,c[8]);
+    if(!sinif||ot<0||ders<0){console.warn("Atlandı (geçersiz değer):",line);continue}
+    const cins=k(c[3])==="kiz"?"Kız":"Erkek";
+    out.push({name:c[0],bolum:c[1],sinif,cins,yurt:c[4],ot,isu:VYQ(c[6]),sev:VYQ(c[7]),ders});
+  }
+  return out;
+}
+async function loadPeople(){
+  try{
+    const r=await fetch("kisiler.txt?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw 0;
+    const list=parseKisiler(await r.text());
+    if(list.length) PEOPLE=list;
+  }catch(e){ /* yedek liste kullanılır */ }
+}
 function showView(list){
   $("listView").style.display=list?"block":"none"; $("gameView").style.display=list?"none":"block";
   $("mList").classList.toggle("active",list);
@@ -489,10 +523,13 @@ $("shareBtn").onclick=()=>{
   (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast("Panoya kopyalandı")).catch(()=>prompt("Kopyala:",txt));
 };
 
-$("yname").textContent=pickFor(dateKey(-1)).name;
 $("sub").innerHTML=`<b>#${dayNo()}</b> · ${new Date().toLocaleDateString("tr-TR",{day:"numeric",month:"long",weekday:"long"})}`;
 if(!store.get("yurdle-seen")){openOv("helpOv");store.set("yurdle-seen",1)}
-start("daily");
+loadPeople().then(()=>{
+  buildList();
+  $("yname").textContent=pickFor(dateKey(-1)).name;
+  start("daily");
+});
 </script>
 </body>
 </html>

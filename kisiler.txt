@@ -1,0 +1,42 @@
+BOCCODLE - KİŞİ LİSTESİ
+========================
+
+Format (her satır bir kişi):
+İsim Soyisim | Bölüm | Sınıf | Cinsiyet | Yurt | Ot | İSU | Sevgili | Ders
+
+Geçerli değerler:
+- Bölüm:    BESS, BIEM, BEMACS, BEMACC, BIG, BIEF, Global Law, BAI,
+            Cybersecurity (MSc), AI (MSc) (yeni bölüm de eklenebilir)
+- Sınıf:    1, 2, 3, Master 1, Master 2
+- Cinsiyet: Erkek, Kız
+- Yurt:     Pensio, Bligny, Dubini, Isonzo, Ev (yeni yurt da eklenebilir)
+- Ot:       Hiç, Az, Çok, Otparator
+- İSU:      Var, Yok, ? (bilinmiyor)
+- Sevgili:  Var, Yok, ? (bilinmiyor)
+- Ders:     Hiç, Az, Orta, Çok
+
+---------------------------------------------------------------
+
+Ömer Arda Muratoğlu | BEMACS | 3 | Erkek | Pensio | Hiç | Var | Var | Orta
+Mehmet Toprak Arık | BESS | 2 | Erkek | Pensio | Otparator | Yok | Yok | Az
+Robin Cihan Güneş | BIEM | 2 | Erkek | Pensio | Az | Var | Var | Orta
+Ayşe Berra Taşkın | BIEM | 2 | Kız | Ev | Otparator | Yok | Yok | Hiç
+Erinç Kılıç | BEMACS | 3 | Erkek | Bligny | Hiç | Var | Yok | Çok
+Ömer Faruk Atasoy | BEMACS | 3 | Erkek | Pensio | Çok | Var | Var | Orta
+Tuna Çolakkaya | BEMACC | 3 | Erkek | Ev | Az | Yok | Yok | Orta
+Deniz Sürtük | BAI | 2 | Erkek | Pensio | Hiç | Var | Yok | Çok
+Sude Öğütçü | BIEM | 1 | Kız | Pensio | Hiç | Var | Yok | Az
+Emre Kalkan | BEMACS | 2 | Erkek | Pensio | Az | Var | Yok | Az
+Hasan Güneş Anacak | BIEM | 2 | Erkek | Dubini | Hiç | Yok | Yok | Orta
+Yağmur Ocak | BIEM | 2 | Kız | Isonzo | Az | Var | Var | Orta
+Demir Kaan Coşkuner | BIEM | 2 | Erkek | Isonzo | Otparator | Var | Yok | Az
+Ali Eren Köyel | BIEM | 3 | Erkek | Pensio | Az | Var | Yok | Orta
+Alp Durgun | BEMACS | 3 | Erkek | Pensio | Hiç | Var | Yok | Çok
+Buğrahan Dinçel | BEMACS | 3 | Erkek | Pensio | Çok | Var | Yok | Az
+Timur Saraç | BEMACS | 3 | Erkek | Pensio | Çok | ? | Yok | Az
+Özgür Ayvaz | BAI | 1 | Erkek | Bligny | Hiç | Var | Yok | Orta
+Çağlar Karaoğlan | BEMACS | 3 | Erkek | Ev | Otparator | ? | Yok | Az
+Tuna Education | Cybersecurity (MSc) | Master 1 | Erkek | Ev | Hiç | Var | Var | Az
+Berkay | AI (MSc) | Master 2 | Erkek | Pensio | Otparator | Var | ? | Az
+Arda Fazlıoğlu | BEMACS | 2 | Erkek | Isonzo | Az | Var | Var | Az
+Mustafa İmamoğlu | BIEM | 2 | Erkek | Ev | Hiç | Yok | Yok | Çok
